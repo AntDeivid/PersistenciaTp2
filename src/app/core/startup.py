@@ -1,5 +1,5 @@
-from collections.abc import Callable, AsyncGenerator
-from contextlib import asynccontextmanager, AbstractAsyncContextManager
+from collections.abc import Callable, Generator
+from contextlib import contextmanager, AbstractContextManager
 from typing import Any
 
 import fastapi
@@ -9,13 +9,13 @@ from fastapi.openapi.utils import get_openapi
 from sqlmodel import SQLModel
 
 from src.app.core.config import DatabaseSettings, AppSettings, EnvironmentSettings, EnvironmentOption
-from src.app.core.db.database import async_engine
+from src.app.core.db.database import engine
 
 
 # --------------------------- database ---------------------------
-async def create_tables() -> None:
-    async with async_engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
+def create_tables() -> None:
+    with engine.begin() as conn:
+        conn.run(SQLModel.metadata.create_all)
 
 # --------------------------- application ---------------------------
 def lifespan_factory(
@@ -25,13 +25,13 @@ def lifespan_factory(
             | EnvironmentSettings
         ),
         create_tables_on_start: bool = True,
-) -> Callable[[FastAPI], AbstractAsyncContextManager[Any]]:
+) -> Callable[[FastAPI], AbstractContextManager[Any]]:
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncGenerator:
+    @contextmanager
+    def lifespan(app: FastAPI) -> Generator:
 
         if isinstance(settings, DatabaseSettings) and create_tables_on_start:
-            await create_tables()
+            create_tables()
 
         yield
 
@@ -68,15 +68,15 @@ def create_application(
             docs_router = APIRouter()
 
             @docs_router.get("/docs", include_in_schema=False)
-            async def get_swagger_documentation() -> fastapi.responses.HTMLResponse:
+            def get_swagger_documentation() -> fastapi.responses.HTMLResponse:
                 return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
 
             @docs_router.get("/redoc", include_in_schema=False)
-            async def get_redoc_documentation() -> fastapi.responses.HTMLResponse:
+            def get_redoc_documentation() -> fastapi.responses.HTMLResponse:
                 return get_redoc_html(openapi_url="/openapi.json", title="docs")
 
             @docs_router.get("/openapi.json", include_in_schema=False)
-            async def openapi() -> dict[str, Any]:
+            def openapi() -> dict[str, Any]:
                 out: dict = get_openapi(title=application.title, version=application.version, routes=application.routes)
                 return out
 
