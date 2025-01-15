@@ -28,6 +28,10 @@ class UsuarioRepository:
         with next(get_db()) as db:
             return db.query(Usuario).filter(Usuario.id == usuario_id).first()
 
+    def get_quantidade_usuarios(self) -> int:
+        with next(get_db()) as db:
+            return db.query(Usuario).count()
+
     def update(self, usuario_id: int, usuario_data: dict) -> Usuario:
         with next(get_db()) as db:
             usuario = db.query(Usuario).filter(Usuario.id == usuario_id).first()
