@@ -1,12 +1,12 @@
-from collections.abc import Callable, Generator
-from contextlib import contextmanager, AbstractContextManager
+from collections.abc import Callable, AsyncGenerator
+from contextlib import asynccontextmanager, AbstractContextManager
 from typing import Any
 
 import fastapi
 from fastapi import FastAPI, APIRouter
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, create_engine
 
 from src.app.core.config import DatabaseSettings, AppSettings, EnvironmentSettings, EnvironmentOption
 from src.app.core.db.database import engine
@@ -15,7 +15,7 @@ from src.app.core.db.database import engine
 # --------------------------- database ---------------------------
 def create_tables() -> None:
     with engine.begin() as conn:
-        conn.run(SQLModel.metadata.create_all)
+        SQLModel.metadata.create_all(bind=conn.engine)
 
 # --------------------------- application ---------------------------
 def lifespan_factory(
@@ -27,8 +27,8 @@ def lifespan_factory(
         create_tables_on_start: bool = True,
 ) -> Callable[[FastAPI], AbstractContextManager[Any]]:
 
-    @contextmanager
-    def lifespan(app: FastAPI) -> Generator:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
         if isinstance(settings, DatabaseSettings) and create_tables_on_start:
             create_tables()
