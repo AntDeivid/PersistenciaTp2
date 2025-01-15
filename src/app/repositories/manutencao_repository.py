@@ -1,5 +1,7 @@
 import logging
+from datetime import datetime
 from sqlite3 import IntegrityError
+from typing import Optional
 
 from src.app.core.db.database import get_db
 from src.app.models.manutencao import Manutencao
@@ -20,10 +22,30 @@ class ManutencaoRepository:
             self.logger.error("Erro ao criar manutenção!")
             raise ValueError("Erro ao criar manutenção!")
 
-    def get_all(self) -> list[Manutencao]:
+    def get_all_no_pagination(self) -> list[Manutencao]:
         with next(get_db()) as db:
-            self.logger.info("Buscando todas as manutenções")
+            self.logger.info("Buscando todas as manutenções, sem paginação")
             return db.query(Manutencao).all()
+
+    def get_all(
+            self,
+            data_inicial: Optional[datetime] = None,
+            data_final: Optional[datetime] = None,
+            tipo_manutencao: Optional[str] = None,
+            page: Optional[int] = 1,
+            limit: Optional[int] = 10
+    ) -> list[Manutencao]:
+        with next(get_db()) as db:
+            query = db.query(Manutencao)
+            if data_inicial and data_final:
+                query = query.filter(Manutencao.data >= data_inicial, Manutencao.data <= data_final)
+            elif data_inicial:
+                query = query.filter(Manutencao.data == data_inicial)
+            if tipo_manutencao:
+                query = query.filter(Manutencao.tipo_manutencao == tipo_manutencao)
+
+            self.logger.info("Buscando todas as manutenções")
+            return query.offset((page - 1) * limit).limit(limit).all()
 
     def get_by_id(self, manutencao_id: int) -> Manutencao:
         with next(get_db()) as db:

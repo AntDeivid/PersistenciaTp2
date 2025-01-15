@@ -1,5 +1,6 @@
 import logging
 from sqlite3 import IntegrityError
+from typing import Optional
 
 from src.app.core.db.database import get_db
 from src.app.models.usuario import Usuario
@@ -20,9 +21,13 @@ class UsuarioRepository:
             self.logger.error("Erro ao criar usuário!")
             raise ValueError("Erro ao criar usuário!")
 
-    def get_all(self) -> list[Usuario]:
+    def get_all_no_pagination(self) -> list[Usuario]:
         with next(get_db()) as db:
             return db.query(Usuario).all()
+
+    def get_all(self, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Usuario]:
+        with next(get_db()) as db:
+            return db.query(Usuario).offset((page - 1) * limit).limit(limit).all()
 
     def get_by_id(self, usuario_id: int) -> Usuario:
         with next(get_db()) as db:

@@ -1,5 +1,6 @@
 import logging
 from sqlite3 import IntegrityError
+from typing import Optional
 
 from sqlalchemy.orm import joinedload
 
@@ -22,10 +23,15 @@ class ContratoRepository:
             self.logger.error("Erro ao criar contrato!")
             raise ValueError("Erro ao criar contrato!")
 
-    def get_all(self) -> list[Contrato]:
+    def get_all_no_pagination(self) -> list[Contrato]:
+        with next(get_db()) as db:
+            self.logger.info("Buscando todos os contratos, sem paginação")
+            return db.query(Contrato).all()
+
+    def get_all(self, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Contrato]:
         with next(get_db()) as db:
             self.logger.info("Buscando todos os contratos")
-            return db.query(Contrato).all()
+            return db.query(Contrato).offset((page - 1) * limit).limit(limit).all()
 
     def get_by_id(self, contrato_id: int) -> Contrato:
         with next(get_db()) as db:
