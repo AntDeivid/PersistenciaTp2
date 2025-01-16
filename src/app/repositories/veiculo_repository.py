@@ -2,6 +2,7 @@ import logging
 from sqlite3 import IntegrityError
 from typing import Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from src.app.core.db.database import get_db
@@ -69,6 +70,21 @@ class VeiculoRepository:
                 query = query.filter(Veiculo.ano == ano)
             self.logger.info(f"Buscando veículos com filtro tipo={tipo}, marca={marca}, modelo={modelo}, ano={ano}")
             return query.offset((page - 1) * limit).limit(limit).all()
+
+    def get_custo_medio_manutencoes_por_veiculo(self) -> list:
+        with next(get_db()) as db:
+            return (
+                db.query(
+                    Veiculo.modelo,
+                    Veiculo.marca,
+                    func.coalesce(func.avg(Manutencao.custo), 0).label("custo_medio")
+                )
+                .outerjoin(VeiculoManutencao, Veiculo.id == VeiculoManutencao.veiculo_id)
+                .outerjoin(Manutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .group_by(Veiculo.id)
+                .order_by(func.avg(Manutencao.custo).desc())
+                .all()
+            )
 
     def update(self, veiculo_id: int, veiculo_data: dict) -> Veiculo:
         with next(get_db()) as db:

@@ -4,7 +4,9 @@ from sqlite3 import IntegrityError
 from typing import Optional
 
 from src.app.core.db.database import get_db
+from src.app.models.contrato import Contrato
 from src.app.models.pagamento import Pagamento
+from src.app.models.usuario import Usuario
 
 
 class PagamentoRepository:
@@ -51,6 +53,25 @@ class PagamentoRepository:
         with next(get_db()) as db:
             self.logger.info(f"Buscando pagamento de id {pagamento_id}")
             return db.query(Pagamento).filter(Pagamento.id == pagamento_id).first()
+
+    def get_pagamentos_pendentes_por_usuario(self) -> list:
+        from sqlalchemy import func
+
+        with next(get_db()) as db:
+            self.logger.info("Consultando pagamentos pendentes por usuário")
+            return (
+                db.query(
+                    Usuario.nome,
+                    Usuario.email,
+                    func.sum(Pagamento.valor).label("total_pendente")
+                )
+                .join(Contrato, Usuario.id == Contrato.usuario_id)
+                .join(Pagamento, Contrato.pagamento_id == Pagamento.id)
+                .filter(Pagamento.pago == False)
+                .group_by(Usuario.id)
+                .order_by(func.sum(Pagamento.valor).desc())
+                .all()
+            )
 
     def update(self, pagamento_id: int, pagamento_data: dict) -> Pagamento:
         with next(get_db()) as db:

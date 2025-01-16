@@ -52,6 +52,21 @@ class ManutencaoRepository:
             self.logger.info(f"Buscando manutenção de id {manutencao_id}")
             return db.query(Manutencao).filter(Manutencao.id == manutencao_id).first()
 
+    def get_tipos_manutencao_mais_frequentes(self) -> list:
+        from sqlalchemy import func
+
+        with next(get_db()) as db:
+            self.logger.info("Consultando tipos de manutenção mais frequentes")
+            return (
+                db.query(
+                    Manutencao.tipo_manutencao,
+                    func.count(Manutencao.id).label("frequencia")
+                )
+                .group_by(Manutencao.tipo_manutencao)
+                .order_by(func.count(Manutencao.id).desc())
+                .all()
+            )
+
     def get_quantidade_manutencoes(self) -> int:
         with next(get_db()) as db:
             self.logger.info("Buscando quantidade de manutenções")

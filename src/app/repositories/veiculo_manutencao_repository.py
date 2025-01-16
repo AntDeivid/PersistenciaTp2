@@ -1,7 +1,12 @@
 import logging
+from datetime import datetime
 from sqlite3 import IntegrityError
 
+from sqlalchemy import func
+
 from src.app.core.db.database import get_db
+from src.app.models.manutencao import Manutencao
+from src.app.models.veiculo import Veiculo
 from src.app.models.veiculo_manutencao import VeiculoManutencao
 
 
@@ -29,6 +34,83 @@ class VeiculoManutencaoRepository:
         with next(get_db()) as db:
             self.logger.info(f"Bucando veículo_manutencao de id {veiculo_manutencao_id}")
             return db.query(VeiculoManutencao).filter(VeiculoManutencao.id == veiculo_manutencao_id).first()
+
+    def get_total_custo_manutencao_por_marca(self) -> list:
+        with next(get_db()) as db:
+            self.logger.info("Buscando total de custo de manutenção por marca")
+            return (
+                db.query(
+                    Veiculo.marca,
+                    func.sum(Manutencao.custo).label("custo_total")
+                )
+                .join(VeiculoManutencao, VeiculoManutencao.veiculo_id == Veiculo.id)
+                .join(VeiculoManutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .group_by(VeiculoManutencao.Veiculo.marca)
+                .order_by(func.sum(VeiculoManutencao.Manutencao.custo).desc())
+                .all()
+            )
+
+    def get_veiculos_com_mais_manutencoes(self, start_date: datetime, end_date: datetime) -> list:
+        with next(get_db()) as db:
+            self.logger.info(f"Consultando veículos com mais manutenções entre {start_date} e {end_date}")
+            return (
+                db.query(
+                    Veiculo.modelo,
+                    Veiculo.marca,
+                    func.count(VeiculoManutencao.id).label("num_manutencoes")
+                )
+                .join(VeiculoManutencao, Veiculo.id == VeiculoManutencao.veiculo_id)
+                .join(Manutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .filter(Manutencao.data >= start_date, Manutencao.data <= end_date)
+                .group_by(Veiculo.id)
+                .order_by(func.count(VeiculoManutencao.id).desc())
+                .all()
+            )
+
+    def get_manutencao_mais_cara_por_veiculo(self) -> list:
+        with next(get_db()) as db:
+            self.logger.info("Consultando manutenção mais cara por veículo")
+            subquery = (
+                db.query(
+                    VeiculoManutencao.veiculo_id,
+                    func.max(Manutencao.custo).label("max_custo")
+                )
+                .join(Manutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .group_by(VeiculoManutencao.veiculo_id)
+                .subquery()
+            )
+
+            return (
+                db.query(
+                    Veiculo.modelo,
+                    Veiculo.marca,
+                    Manutencao.tipo_manutencao,
+                    Manutencao.custo,
+                    Manutencao.observacao
+                )
+                .join(VeiculoManutencao, Veiculo.id == VeiculoManutencao.veiculo_id)
+                .join(Manutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .join(subquery, (Veiculo.id == subquery.c.veiculo_id) & (Manutencao.custo == subquery.c.max_custo))
+                .all()
+            )
+
+    def get_veiculos_com_maior_custo_manutencao(self) -> list:
+        from sqlalchemy import func
+
+        with next(get_db()) as db:
+            self.logger.info("Consultando veículos com maior custo de manutenção acumulado")
+            return (
+                db.query(
+                    Veiculo.modelo,
+                    Veiculo.marca,
+                    func.sum(Manutencao.custo).label("custo_total")
+                )
+                .join(VeiculoManutencao, Veiculo.id == VeiculoManutencao.veiculo_id)
+                .join(Manutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
+                .group_by(Veiculo.id)
+                .order_by(func.sum(Manutencao.custo).desc())
+                .all()
+            )
 
     def get_quantidade_veiculos_manutencao(self) -> int:
         with next(get_db()) as db:

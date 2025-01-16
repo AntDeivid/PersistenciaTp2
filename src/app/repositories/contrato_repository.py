@@ -1,8 +1,10 @@
 import logging
+from datetime import datetime
 from sqlite3 import IntegrityError
 from typing import Optional
 
 from sqlalchemy.orm import joinedload
+from sqlmodel import extract
 
 from src.app.core.db.database import get_db
 from src.app.models.contrato import Contrato
@@ -28,9 +30,14 @@ class ContratoRepository:
             self.logger.info("Buscando todos os contratos, sem paginação")
             return db.query(Contrato).all()
 
-    def get_all(self, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Contrato]:
+    def get_all(self, data_inicial: Optional[datetime] = None, data_final: Optional[datetime] = None, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Contrato]:
         with next(get_db()) as db:
-            self.logger.info("Buscando todos os contratos")
+            query = db.query(Contrato)
+            if data_inicial and data_final:
+                query = query.filter(Contrato.data_inicio >= data_inicial, Contrato.data_fim <= data_final)
+            if data_inicial:
+                query = query.filter(Contrato.data_inicio == data_inicial)
+            self.logger.info(f"Buscando contratos com data inicial {data_inicial} e data final {data_final}")
             return db.query(Contrato).offset((page - 1) * limit).limit(limit).all()
 
     def get_by_id(self, contrato_id: int) -> Contrato:
@@ -48,6 +55,20 @@ class ContratoRepository:
             self.logger.info(f"Buscando todos os contratos com usuario de id {usuario_id}")
             return db.query(Contrato).filter(Contrato.usuario_id == usuario_id).options(joinedload(Contrato.usuario), joinedload(Contrato.veiculo)).all()
 
+    def get_contratos_by_veiculo_marca_pagamento_pago(self, veiculo_marca: str, pagamento_pago: Optional[bool] = None) -> list[Contrato]:
+        with next(get_db()) as db:
+            self.logger.info(f"Buscando todos os contratos com veiculo de marca {veiculo_marca} e pagamento pago {pagamento_pago}")
+            if pagamento_pago is None:
+                return db.query(Contrato).filter(Contrato.veiculo.has(marca=veiculo_marca)).options(joinedload(Contrato.veiculo), joinedload(Contrato.pagamento)).all()
+            return db.query(Contrato).filter(Contrato.veiculo.has(marca=veiculo_marca), Contrato.pagamento.has(pago=pagamento_pago)).options(joinedload(Contrato.veiculo), joinedload(Contrato.pagamento)).all()
+
+    def get_contratos_by_pagamento_vencimento_month_and_usuario_id(self, vencimento_month: datetime, usuario_id: Optional[int] = None) -> list[Contrato]:
+        with next(get_db()) as db:
+            query = db.query(Contrato).join(Contrato.pagamento).filter(extract("month", Contrato.pagamento.vencimento) == vencimento_month.month, extract("year", Contrato.pagamento.vencimento) == vencimento_month.year).options(joinedload(Contrato.pagamento))
+            if usuario_id:
+                query = query.filter(Contrato.usuario_id == usuario_id).options(joinedload(Contrato.usuario))
+            self.logger.info(f"Buscando todos os contratos com pagamento de vencimento no mes {vencimento_month.month} e ano {vencimento_month.year}")
+            return query.all()
 
     def get_quantidade_contratos(self) -> int:
         with next(get_db()) as db:
