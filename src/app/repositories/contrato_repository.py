@@ -8,8 +8,6 @@ from sqlmodel import extract
 
 from src.app.core.db.database import get_db
 from src.app.models.contrato import Contrato
-
-
 class ContratoRepository:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
