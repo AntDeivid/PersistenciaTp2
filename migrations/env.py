@@ -1,3 +1,5 @@
+import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -5,6 +7,17 @@ from sqlalchemy import pool
 
 from alembic import context
 from sqlmodel import SQLModel
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+
+from src.app.models.contrato import Contrato
+from src.app.models.manutencao import Manutencao
+from src.app.models.pagamento import Pagamento
+from src.app.models.usuario import Usuario
+from src.app.models.veiculo import Veiculo
+from src.app.models.veiculo_manutencao import VeiculoManutencao
+
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

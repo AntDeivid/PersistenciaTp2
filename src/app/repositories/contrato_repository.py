@@ -8,6 +8,8 @@ from sqlmodel import extract
 
 from src.app.core.db.database import get_db
 from src.app.models.contrato import Contrato
+from src.app.models.usuario import Usuario
+from src.app.models.veiculo import Veiculo
 
 
 class ContratoRepository:
@@ -74,6 +76,17 @@ class ContratoRepository:
         with next(get_db()) as db:
             self.logger.info("Buscando quantidade de contratos")
             return db.query(Contrato).count()
+
+    def search(self, placa: Optional[str] = None, nome_usuario: Optional[str] = None, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Contrato]:
+        with next(get_db()) as db:
+            query = db.query(Contrato).join(Usuario).join(Veiculo)
+            if placa:
+                query = query.filter(Veiculo.placa.ilike(f"%{placa}%"))
+            if nome_usuario:
+                query = query.filter(Usuario.nome.ilike(f"%{nome_usuario}%"))
+
+            self.logger.info(f"Buscando contratos com filtro placa={placa} e nome_usuario={nome_usuario}")
+            return query.offset((page - 1) * limit).limit(limit).all()
 
     def update(self, contrato_id: int, contrato_data: dict) -> Contrato:
         with next(get_db()) as db:
