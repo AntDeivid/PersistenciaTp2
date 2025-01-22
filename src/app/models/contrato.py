@@ -4,7 +4,6 @@ from typing import Optional
 from sqlmodel import Field, SQLModel, Relationship
 
 from src.app.models.pagamento import Pagamento
-from src.app.models.usuario import Usuario
 from src.app.models.veiculo import Veiculo
 
 class Contrato(SQLModel, table=True):
@@ -15,7 +14,7 @@ class Contrato(SQLModel, table=True):
     data_inicio: datetime = Field(nullable=False)
     data_fim: datetime = Field(nullable=False)
 
-    usuario: Optional[Usuario] = Relationship(back_populates="contratos")
+    usuario: Optional["Usuario"] = Relationship(back_populates="contratos")
     veiculo: Optional[Veiculo] = Relationship(back_populates="contratos")
     pagamento: Optional[Pagamento] = Relationship(back_populates="contratos")
 
