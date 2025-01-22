@@ -9,7 +9,7 @@ class Pagamento(SQLModel, table=True):
     valor: float = Field(nullable=False)
     forma_pagamento: str = Field(max_length=100, nullable=False)
     vencimento: datetime = Field(nullable=False)
-    pago: bool = Field(default=False)
+    pago: bool = Field(default=False) 
 
     class Config:
         orm_mode = True
