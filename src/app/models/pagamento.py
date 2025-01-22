@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 
 class Pagamento(SQLModel, table=True):
@@ -9,7 +9,9 @@ class Pagamento(SQLModel, table=True):
     valor: float = Field(nullable=False)
     forma_pagamento: str = Field(max_length=100, nullable=False)
     vencimento: datetime = Field(nullable=False)
-    pago: bool = Field(default=False) 
+    pago: bool = Field(default=False)
+
+    contratos: Optional["Contrato"] = Relationship(back_populates="pagamento")
 
     class Config:
         orm_mode = True

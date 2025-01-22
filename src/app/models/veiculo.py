@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 
 
 class Veiculo(SQLModel, table=True):
@@ -9,6 +9,8 @@ class Veiculo(SQLModel, table=True):
     marca: str = Field(max_length=100, nullable=False)
     placa: str = Field(max_length=7, nullable=False, unique=True)
     ano: int = Field(nullable=False)
+
+    contratos: Optional["Contrato"] = Relationship(back_populates="veiculo")
 
     class Config:
         orm_mode = True
