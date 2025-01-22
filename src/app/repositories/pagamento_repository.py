@@ -4,6 +4,7 @@ from sqlite3 import IntegrityError
 from typing import Optional
 
 from src.app.core.db.database import get_db
+from src.app.models.PaginationResult import PaginationResult
 from src.app.models.contrato import Contrato
 from src.app.models.pagamento import Pagamento
 from src.app.models.usuario import Usuario
@@ -47,7 +48,18 @@ class PagamentoRepository:
                 query = query.filter(Pagamento.pago == pago)
 
             self.logger.info(f"Buscando pagamentos com filtros: data_inicial={data_inicial}, data_final={data_final}, pago={pago}")
-            return query.offset((page - 1) * limit).limit(limit).all()
+
+            total_items = query.count()
+            number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
+            data = query.offset((page - 1) * limit).limit(limit).all()
+
+            return PaginationResult(
+                page=page,
+                limit=limit,
+                total_items=total_items,
+                number_of_pages=number_of_pages,
+                data=data
+            )
 
     def get_by_id(self, pagamento_id: int) -> Pagamento:
         with next(get_db()) as db:

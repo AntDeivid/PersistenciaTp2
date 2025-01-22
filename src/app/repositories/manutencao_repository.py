@@ -4,6 +4,7 @@ from sqlite3 import IntegrityError
 from typing import Optional
 
 from src.app.core.db.database import get_db
+from src.app.models.PaginationResult import PaginationResult
 from src.app.models.manutencao import Manutencao
 
 
@@ -45,7 +46,18 @@ class ManutencaoRepository:
                 query = query.filter(Manutencao.tipo_manutencao == tipo_manutencao)
 
             self.logger.info("Buscando todas as manutenções")
-            return query.offset((page - 1) * limit).limit(limit).all()
+
+            total_items = query.count()
+            number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
+            data = query.offset((page - 1) * limit).limit(limit).all()
+
+            return PaginationResult(
+                page=page,
+                limit=limit,
+                total_items=total_items,
+                number_of_pages=number_of_pages,
+                data=data
+            )
 
     def get_by_id(self, manutencao_id: int) -> Manutencao:
         with next(get_db()) as db:

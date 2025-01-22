@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from src.app.core.db.database import get_db
+from src.app.models.PaginationResult import PaginationResult
 from src.app.models.manutencao import Manutencao
 from src.app.models.veiculo import Veiculo
 from src.app.models.veiculo_manutencao import VeiculoManutencao
@@ -69,7 +70,18 @@ class VeiculoRepository:
             if ano:
                 query = query.filter(Veiculo.ano == ano)
             self.logger.info(f"Buscando veículos com filtro tipo={tipo}, marca={marca}, modelo={modelo}, ano={ano}")
-            return query.offset((page - 1) * limit).limit(limit).all()
+
+            total_items = query.count()
+            number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
+            data = query.offset((page - 1) * limit).limit(limit).all()
+
+            return PaginationResult(
+                page=page,
+                limit=limit,
+                total_items=total_items,
+                number_of_pages=number_of_pages,
+                data=data
+            )
 
     def get_custo_medio_manutencoes_por_veiculo(self) -> list:
         with next(get_db()) as db:

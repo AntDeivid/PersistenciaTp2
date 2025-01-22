@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import extract
 
 from src.app.core.db.database import get_db
+from src.app.models.PaginationResult import PaginationResult
 from src.app.models.contrato import Contrato
 from src.app.models.usuario import Usuario
 from src.app.models.veiculo import Veiculo
@@ -40,7 +41,18 @@ class ContratoRepository:
             if data_inicial:
                 query = query.filter(Contrato.data_inicio == data_inicial)
             self.logger.info(f"Buscando contratos com data inicial {data_inicial} e data final {data_final}")
-            return db.query(Contrato).offset((page - 1) * limit).limit(limit).all()
+
+            total_items = query.count()
+            number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
+            data = query.offset((page - 1) * limit).limit(limit).all()
+
+            return PaginationResult(
+                page=page,
+                limit=limit,
+                total_items=total_items,
+                number_of_pages=number_of_pages,
+                data=data
+            )
 
     def get_by_id(self, contrato_id: int) -> Contrato:
         with next(get_db()) as db:
@@ -86,7 +98,18 @@ class ContratoRepository:
                 query = query.filter(Usuario.nome.ilike(f"%{nome_usuario}%"))
 
             self.logger.info(f"Buscando contratos com filtro placa={placa} e nome_usuario={nome_usuario}")
-            return query.offset((page - 1) * limit).limit(limit).all()
+
+            total_items = query.count()
+            number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
+            data = query.offset((page - 1) * limit).limit(limit).all()
+
+            return PaginationResult(
+                page=page,
+                limit=limit,
+                total_items=total_items,
+                number_of_pages=number_of_pages,
+                data=data
+            )
 
     def update(self, contrato_id: int, contrato_data: dict) -> Contrato:
         with next(get_db()) as db:
