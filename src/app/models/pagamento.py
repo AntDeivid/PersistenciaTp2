@@ -11,7 +11,7 @@ class Pagamento(SQLModel, table=True):
     vencimento: datetime = Field(nullable=False)
     pago: bool = Field(default=False)
 
-    contratos: Optional["Contrato"] = Relationship(back_populates="pagamento")
+    contrato: Optional["Contrato"] = Relationship(back_populates="pagamento")
 
     class Config:
         orm_mode = True

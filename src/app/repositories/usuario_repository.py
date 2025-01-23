@@ -17,6 +17,7 @@ class UsuarioRepository:
                 db.add(usuario)
                 db.commit()
                 db.refresh(usuario)
+                self.logger.info("Usuário criado com sucesso!")
                 return usuario
         except IntegrityError:
             self.logger.error("Erro ao criar usuário!")
@@ -24,6 +25,7 @@ class UsuarioRepository:
 
     def get_all_no_pagination(self) -> list[Usuario]:
         with next(get_db()) as db:
+            self.logger.info("Buscando todos os usuários, sem paginação")
             return db.query(Usuario).all()
 
     def get_all(self, page: Optional[int] = 1, limit: Optional[int] = 10) -> list[Usuario]:
@@ -33,6 +35,8 @@ class UsuarioRepository:
             total_items = query.count()
             number_of_pages = total_items // limit if total_items % limit == 0 else (total_items // limit) + 1
             data = query.offset((page - 1) * limit).limit(limit).all()
+
+            self.logger.info("Buscando todos os usuários")
 
             return PaginationResult(
                 page=page,
@@ -44,10 +48,12 @@ class UsuarioRepository:
 
     def get_by_id(self, usuario_id: int) -> Usuario:
         with next(get_db()) as db:
+            self.logger.info(f"Buscando usuário de id {usuario_id}")
             return db.query(Usuario).filter(Usuario.id == usuario_id).first()
 
     def get_quantidade_usuarios(self) -> int:
         with next(get_db()) as db:
+            self.logger.info("Buscando quantidade de usuários")
             return db.query(Usuario).count()
 
     def update(self, usuario_id: int, usuario_data: dict) -> Usuario:
@@ -60,6 +66,7 @@ class UsuarioRepository:
                     setattr(usuario, key, value)
             db.commit()
             db.refresh(usuario)
+            self.logger.info(f"Usuário de id {usuario_id} atualizado com sucesso!")
             return usuario
 
     def delete(self, usuario_id: int) -> bool:
@@ -69,4 +76,5 @@ class UsuarioRepository:
                 return False
             db.delete(usuario)
             db.commit()
+            self.logger.info(f"Usuário de id {usuario_id} deletado com sucesso!")
             return True

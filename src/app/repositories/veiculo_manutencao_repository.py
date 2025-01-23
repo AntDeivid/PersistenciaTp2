@@ -20,6 +20,7 @@ class VeiculoManutencaoRepository:
                 db.add(veiculo_manutencao)
                 db.commit()
                 db.refresh(veiculo_manutencao)
+                self.logger.info("Veículo_manutencao criado com sucesso!")
                 return veiculo_manutencao
         except IntegrityError:
             self.logger.error("Erro ao criar veículo_manutencao!")
@@ -44,9 +45,9 @@ class VeiculoManutencaoRepository:
                     func.sum(Manutencao.custo).label("custo_total")
                 )
                 .join(VeiculoManutencao, VeiculoManutencao.veiculo_id == Veiculo.id)
-                .join(VeiculoManutencao, VeiculoManutencao.manutencao_id == Manutencao.id)
-                .group_by(VeiculoManutencao.Veiculo.marca)
-                .order_by(func.sum(VeiculoManutencao.Manutencao.custo).desc())
+                .join(Manutencao, Manutencao.id == VeiculoManutencao.manutencao_id)
+                .group_by(Veiculo.marca)
+                .order_by(func.sum(Manutencao.custo).desc())
                 .all()
             )
 

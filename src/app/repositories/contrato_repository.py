@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlite3 import IntegrityError
 from typing import Optional
 
@@ -9,6 +9,7 @@ from sqlmodel import extract
 from src.app.core.db.database import get_db
 from src.app.models.PaginationResult import PaginationResult
 from src.app.models.contrato import Contrato
+from src.app.models.pagamento import Pagamento
 from src.app.models.usuario import Usuario
 from src.app.models.veiculo import Veiculo
 
@@ -23,6 +24,7 @@ class ContratoRepository:
                 db.add(contrato)
                 db.commit()
                 db.refresh(contrato)
+                self.logger.info("Contrato criado com sucesso!")
                 return contrato
         except IntegrityError:
             self.logger.error("Erro ao criar contrato!")
@@ -78,7 +80,13 @@ class ContratoRepository:
 
     def get_contratos_by_pagamento_vencimento_month_and_usuario_id(self, vencimento_month: datetime, usuario_id: Optional[int] = None) -> list[Contrato]:
         with next(get_db()) as db:
-            query = db.query(Contrato).join(Contrato.pagamento).filter(extract("month", Contrato.pagamento.vencimento) == vencimento_month.month, extract("year", Contrato.pagamento.vencimento) == vencimento_month.year).options(joinedload(Contrato.pagamento))
+            vencimento_inicio = vencimento_month.replace(day=1)
+            vencimento_fim = (vencimento_inicio + timedelta(days=31)).replace(day=1)
+
+            query = db.query(Contrato).join(Pagamento).filter(
+                Pagamento.vencimento >= vencimento_inicio,
+                Pagamento.vencimento < vencimento_fim
+            )#.options(joinedload(Contrato.pagamento))
             if usuario_id:
                 query = query.filter(Contrato.usuario_id == usuario_id).options(joinedload(Contrato.usuario))
             self.logger.info(f"Buscando todos os contratos com pagamento de vencimento no mes {vencimento_month.month} e ano {vencimento_month.year}")

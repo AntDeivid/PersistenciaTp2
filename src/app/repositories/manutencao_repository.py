@@ -18,6 +18,7 @@ class ManutencaoRepository:
                 db.add(manutencao)
                 db.commit()
                 db.refresh(manutencao)
+                self.logger.info("Manutenção criada com sucesso!")
                 return manutencao
         except IntegrityError:
             self.logger.error("Erro ao criar manutenção!")

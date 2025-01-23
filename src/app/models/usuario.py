@@ -9,6 +9,7 @@ class Usuario(SQLModel, table=True):
     email: str = Field(max_length=100, nullable=False, unique=True)
     celular: Optional[str] = Field(default=None, max_length=20)
     cpf: str = Field(max_length=14, nullable=False, unique=True)
+    # apelido: Optional[str] = Field(default=None, max_length=100)
 
     contratos: Optional["Contrato"] = Relationship(back_populates="usuario")
 

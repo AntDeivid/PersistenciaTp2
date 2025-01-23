@@ -6,6 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from src.app.core.db.database import get_db
+from src.app.core.logger import setup_logging
 from src.app.models.PaginationResult import PaginationResult
 from src.app.models.manutencao import Manutencao
 from src.app.models.veiculo import Veiculo
@@ -22,6 +23,7 @@ class VeiculoRepository:
                 db.add(veiculo)
                 db.commit()
                 db.refresh(veiculo)
+                self.logger.info("Veículo criado com sucesso!")
                 return veiculo
         except IntegrityError:
             self.logger.error("Erro ao criar veículo!")
@@ -39,12 +41,20 @@ class VeiculoRepository:
 
     def get_veiculos_com_manutencoes(self) -> list[Veiculo]:
         with next(get_db()) as db:
+            self.logger.info("Buscando veículos com manutenções")
             return db.query(Veiculo).options(joinedload(Veiculo.manutencoes)).all()
 
     def get_veiculos_by_tipo_manutencao(self, tipo_manutencao: str) -> list[Veiculo]:
         with next(get_db()) as db:
-            return db.query(Veiculo).join(VeiculoManutencao).join(Manutencao).filter(
-                Manutencao.tipo_manutencao == tipo_manutencao).options(joinedload(Veiculo.manutencoes)).all()
+            self.logger.info(f"Buscando veículos com manutenções do tipo {tipo_manutencao}")
+            return (
+                db.query(Veiculo)
+                .join(VeiculoManutencao)
+                .join(Manutencao)
+                .filter(Manutencao.tipo_manutencao.ilike(f"%{tipo_manutencao}%"))
+                .options(joinedload(Veiculo.manutencoes))
+                .all()
+            )
 
     def get_quantidade_veiculos(self) -> int:
         with next(get_db()) as db:
@@ -85,6 +95,7 @@ class VeiculoRepository:
 
     def get_custo_medio_manutencoes_por_veiculo(self) -> list:
         with next(get_db()) as db:
+            self.logger.info("Consultando custo médio de manutenções por veículo")
             return (
                 db.query(
                     Veiculo.modelo,

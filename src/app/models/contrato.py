@@ -16,7 +16,7 @@ class Contrato(SQLModel, table=True):
 
     usuario: Optional["Usuario"] = Relationship(back_populates="contratos")
     veiculo: Optional[Veiculo] = Relationship(back_populates="contratos")
-    pagamento: Optional[Pagamento] = Relationship(back_populates="contratos")
+    pagamento: Optional[Pagamento] = Relationship(sa_relationship_kwargs={"uselist": False}, back_populates="contrato")
 
     class Config:
         orm_mode = True

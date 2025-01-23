@@ -20,6 +20,7 @@ class PagamentoRepository:
                 db.add(pagamento)
                 db.commit()
                 db.refresh(pagamento)
+                self.logger.info("Pagamento criado com sucesso!")
                 return pagamento
         except IntegrityError:
             self.logger.error("Erro ao criar pagamento!")
