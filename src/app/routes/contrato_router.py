@@ -20,7 +20,7 @@ def create_contrato(contrato: Contrato):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@contrato_router.get("/", response_model=list)
+@contrato_router.get("/")
 def get_contratos(
     data_inicial: Optional[datetime] = Query(None),
     data_final: Optional[datetime] = Query(None),
@@ -40,7 +40,7 @@ def get_total_contratos():
     return contrato_repository.get_quantidade_contratos()
 
 
-@contrato_router.get("/search", response_model=list)
+@contrato_router.get("/search")
 def search_contratos(
     placa: Optional[str] = Query(None),
     nome_usuario: Optional[str] = Query(None),
