@@ -20,7 +20,7 @@ def create_contrato(contrato: Contrato):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@contrato_router.get("/", response_model=List[Contrato])
+@contrato_router.get("/", response_model=list)
 def get_contratos(
     data_inicial: Optional[datetime] = Query(None),
     data_final: Optional[datetime] = Query(None),
@@ -30,7 +30,7 @@ def get_contratos(
     return contrato_repository.get_all(data_inicial, data_final, page, limit)
 
 
-@contrato_router.get("/all", response_model=List[Contrato])
+@contrato_router.get("/all")
 def get_all_contratos():
     return contrato_repository.get_all_no_pagination()
 
@@ -40,7 +40,7 @@ def get_total_contratos():
     return contrato_repository.get_quantidade_contratos()
 
 
-@contrato_router.get("/search", response_model=List[Contrato])
+@contrato_router.get("/search", response_model=list)
 def search_contratos(
     placa: Optional[str] = Query(None),
     nome_usuario: Optional[str] = Query(None),
@@ -60,19 +60,19 @@ def get_contrato_by_id(contrato_id: int = Path(..., title="The ID of the contrat
     return contrato
 
 
-@contrato_router.get("/usuario-veiculo/", response_model=List[Contrato])
+@contrato_router.get("/usuario-veiculo/")
 def get_contratos_by_usuario_veiculo():
     return contrato_repository.get_contratos_by_usuario_veiculo()
 
 
-@contrato_router.get("/usuario/{usuario_id}", response_model=List[Contrato])
+@contrato_router.get("/usuario/{usuario_id}")
 def get_contratos_by_usuario_id(
     usuario_id: int = Path(..., title="The ID of the user to get contracts")
 ):
     return contrato_repository.get_contratos_by_usuario_id(usuario_id)
 
 
-@contrato_router.get("/veiculo/{veiculo_marca}", response_model=List[Contrato])
+@contrato_router.get("/veiculo/{veiculo_marca}")
 def get_contratos_by_veiculo_marca(
     veiculo_marca: str = Path(
         ..., title="The brand of the vehicle to get contracts"
@@ -83,7 +83,7 @@ def get_contratos_by_veiculo_marca(
         veiculo_marca, pagamento_pago
     )
 
-@contrato_router.get("/pagamento/vencimento/{vencimento_month}", response_model=List[Contrato])
+@contrato_router.get("/pagamento/vencimento/{vencimento_month}")
 def get_contratos_by_pagamento_vencimento_month(
     vencimento_month: datetime = Path(..., title="The month and year of the due date"),
     usuario_id: Optional[int] = Query(None),

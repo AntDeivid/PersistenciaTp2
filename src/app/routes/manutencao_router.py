@@ -17,7 +17,7 @@ def create_manutencao(manutencao: Manutencao):
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-@manutencao_router.get("/", response_model=List[Manutencao])
+@manutencao_router.get("/")
 def get_manutencoes(
     data_inicial: Optional[datetime] = Query(None),
     data_final: Optional[datetime] = Query(None),
@@ -27,7 +27,7 @@ def get_manutencoes(
 ):
     return manutencao_repository.get_all(data_inicial, data_final, tipo_manutencao, page, limit)
 
-@manutencao_router.get("/all", response_model=List[Manutencao])
+@manutencao_router.get("/all")
 def get_all_manutencoes():
     return manutencao_repository.get_all_no_pagination()
 

@@ -16,7 +16,7 @@ def create_veiculo(veiculo: Veiculo):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@veiculo_router.get("/", response_model=List[Veiculo])
+@veiculo_router.get("/")
 def get_veiculos(
     tipo: Optional[str] = Query(None),
     marca: Optional[str] = Query(None),
@@ -28,7 +28,7 @@ def get_veiculos(
     return veiculo_repository.get_all(tipo, marca, modelo, ano, page, limit)
 
 
-@veiculo_router.get("/all", response_model=List[Veiculo])
+@veiculo_router.get("/all")
 def get_all_veiculos():
     return veiculo_repository.get_all_no_pagination()
 
@@ -38,12 +38,12 @@ def get_total_veiculos():
     return veiculo_repository.get_quantidade_veiculos()
 
 
-@veiculo_router.get("/com-manutencoes", response_model=List[Veiculo])
+@veiculo_router.get("/com-manutencoes")
 def get_veiculos_com_manutencoes():
     return veiculo_repository.get_veiculos_com_manutencoes()
 
 
-@veiculo_router.get("/tipo-manutencao/{tipo_manutencao}", response_model=List[Veiculo])
+@veiculo_router.get("/tipo-manutencao/{tipo_manutencao}")
 def get_veiculos_by_tipo_manutencao(tipo_manutencao: str = Path(..., title="The type of maintenance to filter vehicles")):
     return veiculo_repository.get_veiculos_by_tipo_manutencao(tipo_manutencao)
 

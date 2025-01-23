@@ -19,7 +19,7 @@ def create_pagamento(pagamento: Pagamento):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@pagamento_router.get("/", response_model=List[Pagamento])
+@pagamento_router.get("/")
 def get_pagamentos(
     data_inicial: Optional[datetime] = Query(None),
     data_final: Optional[datetime] = Query(None),
@@ -30,7 +30,7 @@ def get_pagamentos(
     return pagamento_repository.get_all(data_inicial, data_final, pago, page, limit)
 
 
-@pagamento_router.get("/all", response_model=List[Pagamento])
+@pagamento_router.get("/all")
 def get_all_pagamentos():
     return pagamento_repository.get_all_no_pagination()
 
